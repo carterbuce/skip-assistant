@@ -7,6 +7,7 @@ import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,9 @@ import java.util.concurrent.TimeUnit;
 @Scope("prototype")
 public class SpotifyPollingService {
 
-    @Autowired SkippedTrackRepository skippedTrackRepository;
+    @Autowired private SkippedTrackRepository skippedTrackRepository;
+    @Value("${spotify.client.id}") private String clientId;
+    @Value("${spotify.client.secret}") private String clientSecret;
     private static final Logger LOGGER = LoggerFactory.getLogger(PageControllerImpl.class);
     private String key;
 

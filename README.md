@@ -3,13 +3,27 @@ A Spotify-connected app that detects when you skip a song frequently and suggest
 
 This project makes use of the [Spotify Web API Java](https://github.com/thelinmichael/spotify-web-api-java) library.
 
+## Setup
+Create a Spotify application at <https://developer.spotify.com/my-applications> to get ID and Secret values 
+
 ## Running
+
+### Running through IntelliJ:
 The application can be run in IntelliJ through the `Application.java` file
 
-To run through command line, use the `run.bat` file
+Edit the Spring Boot configuration and add the following VM options from the setup step:
 
-To debug, connect a remote debugger to localhost:5005 and run the `debug.bat` file 
-or run debug mode on `Application.java` in IntelliJ
+    -DspotifyClientId=<id value>
+    -DspotifyClientSecret=<secret value>
+
+### Running via command line:
+Using values from the setup step, run
+
+    mvnw clean -f pom.xml spring-boot:run -Drun.jvmArguments="-DspotifyClientId=<id value> -DspotifyClientSecret=<secret value>"
+    
+To enable debugging, add the following and attach a remote debugger on port 5005
+    
+    -Drun.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
 
 ## Database Access
 Spring runs a built-in [H2](http://www.h2database.com/html/main.html) database.
