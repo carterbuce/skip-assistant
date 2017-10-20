@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -37,25 +35,6 @@ public class SpotifyPollingService {
     @SuppressWarnings("SpringJavaAutowiringInspection")
     public SpotifyPollingService(String key) {
         this.key = key;
-    }
-
-
-    public String getAuthorizationURL() {
-        // Create the API object
-        this.api = Api.builder()
-                .clientId(env.getProperty("spotify.client.id"))
-                .clientSecret(env.getProperty("spotify.client.secret"))
-                .redirectURI(env.getProperty("spotify.redirect.uri"))
-                .build();
-
-        // Set the necessary scopes that the application will need from the user
-        String scopes = env.getProperty("spotify.oauth.scope");
-        List<String> scopeList = Arrays.asList(scopes.split(","));
-
-        // Set a state. This is used to prevent cross site request forgeries.
-        String state = env.getProperty("spotify.oauth.state");
-
-        return this.api.createAuthorizeURL(scopeList, state);
     }
 
 
