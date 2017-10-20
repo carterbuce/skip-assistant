@@ -1,7 +1,8 @@
 # skip-assistant
 A Spotify-connected app that detects when you skip a song frequently and suggests you remove it from the playlist
 
-This project makes use of the [Spotify Web API Java](https://github.com/thelinmichael/spotify-web-api-java) library.
+This project makes use of the [Spotify Web API Java](https://github.com/thelinmichael/spotify-web-api-java) library
+and [Spring MVC](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html)
 
 ## Setup
 Create a Spotify application at <https://developer.spotify.com/my-applications> to get ID and Secret values 
