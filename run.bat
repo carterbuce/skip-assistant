@@ -1,1 +1,0 @@
-mvnw clean -f pom.xml spring-boot:run

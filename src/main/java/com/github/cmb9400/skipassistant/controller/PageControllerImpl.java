@@ -20,13 +20,23 @@ public class PageControllerImpl implements PageController {
 
     @Override
     public String index(@RequestParam(value="name", required=false, defaultValue="World") String name, Model model) {
-        SpotifyPollingService pollingService1 = (SpotifyPollingService) applicationContext.getBean("spotifyPollingService", "foo1");
-        SpotifyPollingService pollingService2 = (SpotifyPollingService) applicationContext.getBean("spotifyPollingService", "foo2");
-
-        pollingService1.findSkippedSongs();
-        pollingService2.findSkippedSongs();
-
         model.addAttribute("name", name);
         return "index";
+    }
+
+    @Override
+    public String login(Model model) {
+        SpotifyPollingService pollingService1 = (SpotifyPollingService) applicationContext.getBean("spotifyPollingService", "foo1");
+
+        String authURL = pollingService1.getAuthorizationURL();
+        model.addAttribute("link", authURL);
+
+        return "login";
+    }
+
+    @Override
+    public String callback(@RequestParam(value="code", required=true) String code, Model model) {
+        model.addAttribute("code", code);
+        return "callback";
     }
 }
