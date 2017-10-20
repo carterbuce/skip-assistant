@@ -32,12 +32,20 @@ public class SpotifyPollingService {
     private Api api;
 
 
+    /**
+     * Constructor for a polling service object. Key is not autowired, it is passed in during creation
+     * @param key TODO placeholder until method implemented
+     */
     @SuppressWarnings("SpringJavaAutowiringInspection")
     public SpotifyPollingService(String key) {
         this.key = key;
     }
 
 
+    /**
+     * Start searching for skipped songs asynchronously
+     * TODO placeholder until method implemented
+     */
     @Async
     public void findSkippedSongs() {
         for (int i = 0; i < 3; i++) {

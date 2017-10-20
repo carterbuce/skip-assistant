@@ -12,6 +12,7 @@ import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
 
+
 @Service
 public class SpotifyHelperService {
 
@@ -22,9 +23,10 @@ public class SpotifyHelperService {
     ApplicationContext applicationContext;
 
 
-    public SpotifyHelperService() {
-    }
-
+    /**
+     * Get an API builder
+     * @return a new API builder with client settings
+     */
     public Api.Builder getApiBuilder() {
         return Api.builder()
                 .clientId(env.getProperty("spotify.client.id"))
@@ -33,6 +35,10 @@ public class SpotifyHelperService {
     }
 
 
+    /**
+     * Get a generated URL to authorize this app with spotify and log in
+     * @return a URL string
+     */
     public String getAuthorizationURL() {
         // Create the API object
         Api api = getApiBuilder().build();
@@ -48,6 +54,11 @@ public class SpotifyHelperService {
     }
 
 
+    /**
+     * Create a new instance of a polling service
+     * @param key TODO placeholder until method implemented
+     * @return a new polling service object for given key
+     */
     public SpotifyPollingService getNewPollingService(String key) {
         return (SpotifyPollingService) applicationContext.getBean("spotifyPollingService", key);
     }
