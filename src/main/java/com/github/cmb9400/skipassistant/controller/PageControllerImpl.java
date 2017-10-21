@@ -29,9 +29,6 @@ public class PageControllerImpl implements PageController {
 
     @Override
     public String login(Model model) {
-        SpotifyPollingService pollingService1 = spotifyHelperService.getNewPollingService("foo1");
-        pollingService1.findSkippedSongs();
-
         String authURL = spotifyHelperService.getAuthorizationURL();
         model.addAttribute("link", authURL);
 
@@ -40,6 +37,9 @@ public class PageControllerImpl implements PageController {
 
     @Override
     public String callback(@RequestParam(value="code", required=true) String code, Model model) {
+        SpotifyPollingService pollingService = spotifyHelperService.getNewPollingService(code);
+        pollingService.run();
+
         model.addAttribute("code", code);
         return "callback";
     }

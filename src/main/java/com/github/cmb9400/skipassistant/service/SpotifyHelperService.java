@@ -2,6 +2,8 @@ package com.github.cmb9400.skipassistant.service;
 
 import com.wrapper.spotify.Api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
@@ -22,6 +24,8 @@ public class SpotifyHelperService {
     @Autowired
     ApplicationContext applicationContext;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyHelperService.class);
+
 
     /**
      * Get an API builder
@@ -40,7 +44,7 @@ public class SpotifyHelperService {
      * @return a URL string
      */
     public String getAuthorizationURL() {
-        // Create the API object
+        LOGGER.info("Getting Authorize URL");
         Api api = getApiBuilder().build();
 
         // Set the necessary scopes that the application will need from the user
@@ -56,11 +60,11 @@ public class SpotifyHelperService {
 
     /**
      * Create a new instance of a polling service
-     * @param key TODO placeholder until method implemented
+     * @param code the Authorization Code sent from Spotify
      * @return a new polling service object for given key
      */
-    public SpotifyPollingService getNewPollingService(String key) {
-        return (SpotifyPollingService) applicationContext.getBean("spotifyPollingService", key);
+    public SpotifyPollingService getNewPollingService(String code) {
+        return (SpotifyPollingService) applicationContext.getBean("spotifyPollingService", code);
     }
 
 }
