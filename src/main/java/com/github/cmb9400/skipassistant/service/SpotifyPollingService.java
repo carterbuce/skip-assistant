@@ -19,7 +19,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Scope("prototype")
@@ -50,30 +52,47 @@ public class SpotifyPollingService {
         this.code = code;
     }
 
+
+    /**
+     * Start the polling service
+     */
     @Async
     public void run() throws RuntimeException {
         try {
             init();
             login();
-            findSkippedSongs();
+            pollSongs();
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+
     private void init() {
         api = spotifyHelperService.getApiBuilder().build();
     }
 
 
-    private void login() throws IOException, WebApiException {
+    /**
+     * Log in to the account using the authorization code and get the access token
+     */
+    private void login() throws IOException, WebApiException, RuntimeException {
         try {
             LOGGER.info("Getting Tokens from Authorization Code...");
             AuthorizationCodeCredentials authorizationCodeCredentials = api.authorizationCodeGrant(code).build().get();
             api.setAccessToken(authorizationCodeCredentials.getAccessToken());
             api.setRefreshToken(authorizationCodeCredentials.getRefreshToken());
             user = api.getMe().build().get();
+
+            // don't continue if already polling that user
+            if (spotifyHelperService.runningUserIds.contains(user.getId())) {
+                LOGGER.error("Already polling user " + user.getId() + "!");
+                throw new RuntimeException("Already polling user " + user.getId() + "!");
+            }
+            else {
+                spotifyHelperService.runningUserIds.add(user.getId());
+            }
         }
         catch (WebApiException | IOException e) {
             LOGGER.error(e.getMessage());
@@ -83,19 +102,37 @@ public class SpotifyPollingService {
 
 
     /**
-     * Start searching for skipped songs
+     * Start searching for skipped songs.
+     * This method will continuously poll the spotify service for recently played tracks
+     * Once it polls the service, it will store the most recently played song
+     * @see <a href=https://developer.spotify.com/web-api/web-api-personalization-endpoints/get-recently-played/>Spotify Docs</a>
+     *
      */
-    protected void findSkippedSongs() {
+    private void pollSongs() {
         LOGGER.info("Searching for skipped songs...");
+        RecentlyPlayedTrack mostRecent = null;
 
         while (true) {
             try {
-                TimeUnit.SECONDS.sleep(10);
-                 Page<RecentlyPlayedTrack> songs = api.getRecentlyPlayedTracks().build().get();
-                LOGGER.info("Most recently played song for " + user.getDisplayName() + ": "
-                        + songs.getItems().get(0).getTrack().getName()
-                        + " (" + songs.getItems().get(0).getPlayedAt().toString() + ")");
-//                skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
+                TimeUnit.SECONDS.sleep(10); //TODO increase polling delay, since we get up to 20 songs per poll
+
+                // get recently played songs
+                Page<RecentlyPlayedTrack> songs;
+                if (mostRecent == null) {
+                    // get the 20 most recently played tracks
+                    songs = api.getRecentlyPlayedTracks().build().get();
+                }
+                else {
+                    // get at most 20 recently played tracks after (and including) the last one seen
+                    String after = Long.toString(mostRecent.getPlayedAt().getTime());
+                    songs = api.getRecentlyPlayedTracks().build(after).get();
+                }
+
+                // store most recently played song for further queries
+                mostRecent = songs.getItems().get(0);
+
+                // find which songs were skipped and save them to the repository
+                findSkippedSongs(songs);
             }
             catch (Exception e){
                 LOGGER.error("Polling service failed!");
@@ -103,6 +140,27 @@ public class SpotifyPollingService {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    //TODO filter out the songs
+    // - non-playlist tracks
+    // - changing playlists vs skipping songs
+    // - already recorded skips (use the "after" timestamp?)
+    private void findSkippedSongs(Page<RecentlyPlayedTrack> songs) {
+        // position 0 is the most recently played
+        List<RecentlyPlayedTrack> songsItems = songs.getItems();
+
+        if (songsItems.size() == 1) {
+            LOGGER.info("No new songs played since last poll.");
+        }
+        else {
+            LOGGER.info("New songs detected since last poll: ");
+            LOGGER.info(songsItems.stream().map(e -> e.getTrack().getName()).collect(Collectors.joining(", ")));
+        }
+
+        // skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
+
     }
 
 }

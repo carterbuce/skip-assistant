@@ -16,7 +16,10 @@ public class SkippedTrackEntity {
     String playlistId;
 
     // userId
+    // playlistId
+    // songURI
     // numberSkips
+    // most recently played date? this may help prevent duplicates between runs of server, but won't help with long uptimes
     // composite primary key: (userid, playlistid, songid)
 
     protected SkippedTrackEntity() {}

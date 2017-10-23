@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,6 +24,8 @@ public class SpotifyHelperService {
 
     @Autowired
     ApplicationContext applicationContext;
+
+    public List<String> runningUserIds = new ArrayList<>();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyHelperService.class);
 
