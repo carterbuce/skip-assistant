@@ -7,6 +7,11 @@ and [Spring MVC](https://docs.spring.io/spring/docs/current/spring-framework-ref
 ## Setup
 Create a Spotify application at <https://developer.spotify.com/my-applications> to get ID and Secret values 
 
+Clone [my fork of Spotify Web API](https://github.com/cmb9400/spotify-web-api-java/tree/add-recently-played-tracks)
+and install it with `mvn install -DskipTests`. It should install as version 1.7.1.
+
+* I've made a Pull Request for it [here (#TODO)]() 
+
 ## Running
 
 ### Running through IntelliJ:

@@ -4,6 +4,8 @@ import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.wrapper.spotify.Api;
 import com.wrapper.spotify.exceptions.WebApiException;
 import com.wrapper.spotify.models.AuthorizationCodeCredentials;
+import com.wrapper.spotify.models.Page;
+import com.wrapper.spotify.models.RecentlyPlayedTrack;
 import com.wrapper.spotify.models.User;
 
 import org.slf4j.Logger;
@@ -41,14 +43,14 @@ public class SpotifyPollingService {
 
     /**
      * Constructor for a polling service object. Key is not autowired, it is passed in during creation
-     * @param code TODO placeholder until method implemented
+     * @param code the user's authorization code
      */
     @SuppressWarnings("SpringJavaAutowiringInspection")
     public SpotifyPollingService(String code) {
         this.code = code;
     }
 
-
+    @Async
     public void run() throws RuntimeException {
         try {
             init();
@@ -82,22 +84,23 @@ public class SpotifyPollingService {
 
     /**
      * Start searching for skipped songs
-     * TODO placeholder until method implemented
      */
-    @Async
     protected void findSkippedSongs() {
         LOGGER.info("Searching for skipped songs...");
 
         while (true) {
             try {
-                String songName = "foo";
-                LOGGER.info("Currently playing song for " + user.getDisplayName() + ": " + songName);
-//                skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
                 TimeUnit.SECONDS.sleep(10);
+                 Page<RecentlyPlayedTrack> songs = api.getRecentlyPlayedTracks().build().get();
+                LOGGER.info("Most recently played song for " + user.getDisplayName() + ": "
+                        + songs.getItems().get(0).getTrack().getName()
+                        + " (" + songs.getItems().get(0).getPlayedAt().toString() + ")");
+//                skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
             }
             catch (Exception e){
                 LOGGER.error("Polling service failed!");
                 LOGGER.error(e.getMessage());
+                e.printStackTrace();
             }
         }
     }
