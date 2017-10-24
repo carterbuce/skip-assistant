@@ -77,6 +77,7 @@ public class SpotifyPollingService {
 
     /**
      * Log in to the account using the authorization code and get the access token
+     * TODO deal with token expiration and refreshing
      */
     private void login() throws IOException, WebApiException, RuntimeException {
         try {
@@ -107,7 +108,7 @@ public class SpotifyPollingService {
      * This method will continuously poll the spotify service for recently played tracks
      * Once it polls the service, it will store the most recently played song
      * @see <a href=https://developer.spotify.com/web-api/web-api-personalization-endpoints/get-recently-played/>Spotify Docs</a>
-     *
+     * TODO deal with 429 too many requests response code
      */
     private void pollSongs() {
         LOGGER.info("Searching for skipped songs...");
