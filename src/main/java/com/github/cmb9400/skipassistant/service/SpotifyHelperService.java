@@ -95,7 +95,12 @@ public class SpotifyHelperService {
      * @return if the song is played from one of the user's playlists
      */
     public Boolean isValidPlaylistTrack(RecentlyPlayedTrack song, User user) {
-        return song.getContext().getUri().contains(user.getId());
+        if (song.getContext() == null) {
+            return false;
+        }
+        else {
+            return song.getContext().getUri().contains(user.getId());
+        }
     }
 
 }
