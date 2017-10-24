@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -114,7 +115,7 @@ public class SpotifyPollingService {
 
         while (true) {
             try {
-                TimeUnit.SECONDS.sleep(10); //TODO increase polling delay, since we get up to 20 songs per poll
+                TimeUnit.SECONDS.sleep(Long.parseLong(env.getProperty("polling.frequency.seconds")));
 
                 // get recently played songs
                 Page<RecentlyPlayedTrack> songs;
@@ -130,6 +131,7 @@ public class SpotifyPollingService {
 
                 // store most recently played song for further queries
                 mostRecent = songs.getItems().get(0);
+                LOGGER.info("Most recent track for " + user.getId() + ": " + mostRecent.getTrack().getName());
 
                 // find which songs were skipped and save them to the repository
                 findSkippedSongs(songs);
@@ -143,23 +145,35 @@ public class SpotifyPollingService {
     }
 
 
-    //TODO filter out the songs
-    // - non-playlist tracks
-    // - changing playlists vs skipping songs
-    // - already recorded skips (use the "after" timestamp?)
+    /**
+     * Determine which RecentlyPlayedTracks from a list were skipped and save them to the repository
+     * @param songs a list of RecentlyPlayedTracks
+     */
     private void findSkippedSongs(Page<RecentlyPlayedTrack> songs) {
-        // position 0 is the most recently played
-        List<RecentlyPlayedTrack> songsItems = songs.getItems();
+        List<RecentlyPlayedTrack> songsList = songs.getItems();
+        List<RecentlyPlayedTrack> skippedSongs = new ArrayList<>();
 
-        if (songsItems.size() == 1) {
-            LOGGER.info("No new songs played since last poll.");
-        }
-        else {
-            LOGGER.info("New songs detected since last poll: ");
-            LOGGER.info(songsItems.stream().map(e -> e.getTrack().getName()).collect(Collectors.joining(", ")));
+        // position 0 is the most recently played song
+        if (songsList.size() < 2) return;
+
+        // find all the skipped songs, iterating from most recent to oldest play time
+        for (int i = 0; i < songsList.size() - 1; i++) {
+            RecentlyPlayedTrack newerSong = songsList.get(i);
+            RecentlyPlayedTrack olderSong = songsList.get(i+1);
+
+            if (spotifyHelperService.wasSkipped(olderSong, newerSong) &&
+                    spotifyHelperService.isValidPlaylistTrack(olderSong, user)) {
+                skippedSongs.add(olderSong);
+            }
         }
 
-        // skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
+        // save the skipped songs
+        if(skippedSongs.size() > 0) {
+            LOGGER.info("Skipped songs detected: ");
+            LOGGER.info(skippedSongs.stream().map(e -> e.getTrack().getName()).collect(Collectors.joining(", ")));
+            // TODO skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
+        }
+
 
     }
 

@@ -1,6 +1,8 @@
 package com.github.cmb9400.skipassistant.service;
 
 import com.wrapper.spotify.Api;
+import com.wrapper.spotify.models.RecentlyPlayedTrack;
+import com.wrapper.spotify.models.User;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +70,32 @@ public class SpotifyHelperService {
      */
     public SpotifyPollingService getNewPollingService(String code) {
         return (SpotifyPollingService) applicationContext.getBean("spotifyPollingService", code);
+    }
+
+
+    /**
+     * Compares the "checkedSong" to the "nextSong" to see if the "checkedSong" was skipped or not
+     * @param prevSong the RecentlyPlayedTrack to determine if it was skipped
+     * @param nextSong The song played after checkedSong (more recent)
+     * @return if prevSong was skipped or not
+     */
+    public Boolean wasSkipped(RecentlyPlayedTrack prevSong, RecentlyPlayedTrack nextSong) {
+        Long skipSensitivitySeconds = Long.parseLong(env.getProperty("polling.skip.sensitivity.seconds"));
+
+        Long secondsBetween = nextSong.getPlayedAt().toInstant().getEpochSecond() - prevSong.getPlayedAt().toInstant().getEpochSecond();
+
+        return secondsBetween < skipSensitivitySeconds;
+    }
+
+
+    /**
+     * determine if a given song is part of a user's playlist
+     * @param song a given played song
+     * @param user the user that played the song
+     * @return if the song is played from one of the user's playlists
+     */
+    public Boolean isValidPlaylistTrack(RecentlyPlayedTrack song, User user) {
+        return song.getContext().getUri().contains(user.getId());
     }
 
 }
