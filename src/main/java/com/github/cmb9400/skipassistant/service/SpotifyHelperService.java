@@ -1,7 +1,7 @@
 package com.github.cmb9400.skipassistant.service;
 
 import com.wrapper.spotify.Api;
-import com.wrapper.spotify.models.RecentlyPlayedTrack;
+import com.wrapper.spotify.models.CurrentlyPlayingTrack;
 import com.wrapper.spotify.models.User;
 
 import org.slf4j.Logger;
@@ -79,10 +79,12 @@ public class SpotifyHelperService {
      * @param nextSong The song played after checkedSong (more recent)
      * @return if prevSong was skipped or not
      */
-    public Boolean wasSkipped(RecentlyPlayedTrack prevSong, RecentlyPlayedTrack nextSong) {
+    public Boolean wasSkipped(CurrentlyPlayingTrack prevSong, CurrentlyPlayingTrack nextSong) {
+        if (prevSong == null || nextSong == null) return false;
+
         Long skipSensitivitySeconds = Long.parseLong(env.getProperty("polling.skip.sensitivity.seconds"));
 
-        Long secondsBetween = nextSong.getPlayedAt().toInstant().getEpochSecond() - prevSong.getPlayedAt().toInstant().getEpochSecond();
+        Long secondsBetween = (nextSong.getTimestamp() / 1000) - (prevSong.getTimestamp() / 1000);
 
         return secondsBetween < skipSensitivitySeconds;
     }
@@ -94,7 +96,7 @@ public class SpotifyHelperService {
      * @param user the user that played the song
      * @return if the song is played from one of the user's playlists
      */
-    public Boolean isValidPlaylistTrack(RecentlyPlayedTrack song, User user) {
+    public Boolean isValidPlaylistTrack(CurrentlyPlayingTrack song, User user) {
         if (song.getContext() == null) {
             return false;
         }

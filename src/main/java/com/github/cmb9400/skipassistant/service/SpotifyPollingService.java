@@ -4,8 +4,7 @@ import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.wrapper.spotify.Api;
 import com.wrapper.spotify.exceptions.WebApiException;
 import com.wrapper.spotify.models.AuthorizationCodeCredentials;
-import com.wrapper.spotify.models.Page;
-import com.wrapper.spotify.models.RecentlyPlayedTrack;
+import com.wrapper.spotify.models.CurrentlyPlayingTrack;
 import com.wrapper.spotify.models.User;
 
 import org.slf4j.Logger;
@@ -19,10 +18,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 @Scope("prototype")
@@ -77,7 +73,6 @@ public class SpotifyPollingService {
 
     /**
      * Log in to the account using the authorization code and get the access token
-     * TODO deal with token expiration and refreshing
      */
     private void login() throws IOException, WebApiException, RuntimeException {
         try {
@@ -109,33 +104,31 @@ public class SpotifyPollingService {
      * Once it polls the service, it will store the most recently played song
      * @see <a href=https://developer.spotify.com/web-api/web-api-personalization-endpoints/get-recently-played/>Spotify Docs</a>
      * TODO deal with 429 too many requests response code
+     * TODO deal with 401 unauthorized -- refresh access token
      */
     private void pollSongs() {
         LOGGER.info("Searching for skipped songs...");
-        RecentlyPlayedTrack mostRecent = null;
+        CurrentlyPlayingTrack mostRecent = null;
 
         while (true) {
             try {
-                TimeUnit.SECONDS.sleep(Long.parseLong(env.getProperty("polling.frequency.seconds")));
+                TimeUnit.MILLISECONDS.sleep(Long.parseLong(env.getProperty("polling.frequency.milliseconds")));
 
-                // get recently played songs
-                Page<RecentlyPlayedTrack> songs;
-                if (mostRecent == null) {
-                    // get the 20 most recently played tracks
-                    songs = api.getRecentlyPlayedTracks().build().get();
+                // get current song
+                CurrentlyPlayingTrack currentSong = api.getCurrentlyPlayingTrack().build().get();
+                LOGGER.info("Current track for " + user.getId() + ": " + currentSong.getItem().getName());
+
+
+                if (currentSong.equals(mostRecent)) {
+                    // do nothing, the song hasn't changed
                 }
                 else {
-                    // get at most 20 recently played tracks after (and including) the last one seen
-                    String after = Long.toString(mostRecent.getPlayedAt().getTime());
-                    songs = api.getRecentlyPlayedTracks().build(after).get();
+                    // check to see if the song was skipped
+                    checkSkipped(mostRecent, currentSong);
+
+                    // store most recently played song for further queries
+                    mostRecent = currentSong;
                 }
-
-                // store most recently played song for further queries
-                mostRecent = songs.getItems().get(0);
-                LOGGER.info("Most recent track for " + user.getId() + ": " + mostRecent.getTrack().getName());
-
-                // find which songs were skipped and save them to the repository
-                findSkippedSongs(songs);
             }
             catch (Exception e){
                 LOGGER.error("Polling service failed!");
@@ -145,37 +138,13 @@ public class SpotifyPollingService {
         }
     }
 
-
-    /**
-     * Determine which RecentlyPlayedTracks from a list were skipped and save them to the repository
-     * @param songs a list of RecentlyPlayedTracks
-     */
-    private void findSkippedSongs(Page<RecentlyPlayedTrack> songs) {
-        List<RecentlyPlayedTrack> songsList = songs.getItems();
-        List<RecentlyPlayedTrack> skippedSongs = new ArrayList<>();
-
-        // position 0 is the most recently played song
-        if (songsList.size() < 2) return;
-
-        // find all the skipped songs, iterating from most recent to oldest play time
-        for (int i = 0; i < songsList.size() - 1; i++) {
-            RecentlyPlayedTrack newerSong = songsList.get(i);
-            RecentlyPlayedTrack olderSong = songsList.get(i+1);
-
-            if (spotifyHelperService.wasSkipped(olderSong, newerSong) &&
-                    spotifyHelperService.isValidPlaylistTrack(olderSong, user)) {
-                skippedSongs.add(olderSong);
-            }
-        }
-
-        // save the skipped songs
-        if(skippedSongs.size() > 0) {
-            LOGGER.info("Skipped songs detected: ");
-            LOGGER.info(skippedSongs.stream().map(e -> e.getTrack().getName()).collect(Collectors.joining(", ")));
+    private void checkSkipped(CurrentlyPlayingTrack prevSong, CurrentlyPlayingTrack nextSong) {
+        // find which songs were skipped and save them to the repository
+        if (spotifyHelperService.wasSkipped(prevSong, nextSong) &&
+                spotifyHelperService.isValidPlaylistTrack(prevSong, user)) {
+            LOGGER.info("Skipped song detected");
             // TODO skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
         }
-
-
     }
 
 }
