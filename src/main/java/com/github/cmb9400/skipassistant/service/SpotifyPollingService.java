@@ -116,13 +116,14 @@ public class SpotifyPollingService {
 
                 // get current song
                 CurrentlyPlayingTrack currentSong = api.getCurrentlyPlayingTrack().build().get();
-                LOGGER.info("Current track for " + user.getId() + ": " + currentSong.getItem().getName());
 
 
                 if (currentSong.equals(mostRecent)) {
                     // do nothing, the song hasn't changed
                 }
                 else {
+                    LOGGER.info("Current track for " + user.getId() + ": " + currentSong.getItem().getName());
+
                     // check to see if the song was skipped
                     checkSkipped(mostRecent, currentSong);
 
@@ -142,7 +143,9 @@ public class SpotifyPollingService {
         // find which songs were skipped and save them to the repository
         if (spotifyHelperService.wasSkipped(prevSong, nextSong) &&
                 spotifyHelperService.isValidPlaylistTrack(prevSong, user)) {
-            LOGGER.info("Skipped song detected");
+            LOGGER.info("Skipped song detected! \n    "
+                    + user.getId() + " skipped " + prevSong.getItem().getName()
+                    + "\n    in playlist " + prevSong.getContext().getUri());
             // TODO skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
         }
     }
