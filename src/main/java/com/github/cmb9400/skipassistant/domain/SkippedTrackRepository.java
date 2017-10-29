@@ -10,6 +10,14 @@ import javax.transaction.Transactional;
 @Repository
 public interface SkippedTrackRepository extends CrudRepository<SkippedTrackEntity, Long> {
 
+    /**
+     * Insert a track entity, if it already exists then increment its num_skips
+     *
+     * This method is kind of a hack, see the `@SQLInsert` on SkippedTrackEntity
+     *  The issue with that is the entity is persisted in spring and so after the first
+     *  insert, it will run a merge instead of an insert, so this is easier than implementing
+     *  a new repository
+     */
     @Transactional
     @Modifying(clearAutomatically=true)
     @Query(value="INSERT INTO SKIPPED_TRACK_ENTITY(NUM_SKIPS, PLAYLIST_HREF, SONG_URI, USER_ID) VALUES (?1, ?2, ?3, ?4) ON DUPLICATE KEY UPDATE NUM_SKIPS = NUM_SKIPS + 1", nativeQuery = true)
