@@ -1,40 +1,54 @@
 package com.github.cmb9400.skipassistant.domain;
 
+import org.hibernate.annotations.SQLInsert;
+
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 
 @Entity
+@IdClass(SkippedTrackModel.class)
+@SQLInsert(sql="INSERT INTO SKIPPED_TRACK_ENTITY(NUM_SKIPS, PLAYLIST_HREF, SONG_URI, USER_ID) VALUES (?, ?, ?, ?) " +
+        "ON DUPLICATE KEY UPDATE NUM_SKIPS = NUM_SKIPS + 1")
 public class SkippedTrackEntity {
 
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long id; // this can get removed
-
-    String songId;
-    String playlistId;
-
-    // userId
-    // playlistId
-    // songURI
-    // numberSkips
-    // most recently played date? this may help prevent duplicates between runs of server, but won't help with long uptimes
-    // composite primary key: (userid, playlistid, songid)
-
-    protected SkippedTrackEntity() {}
+    @Id String userId;
+    @Id String playlistHref;
+    @Id String songUri;
+    Integer numSkips;
 
 
-    public SkippedTrackEntity(String songId, String playlistId) {
-        this.songId = songId;
-        this.playlistId = playlistId;
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getPlaylistHref() {
+        return playlistHref;
+    }
+
+    public void setPlaylistHref(String playlistHref) {
+        this.playlistHref = playlistHref;
+    }
+
+    public String getSongUri() {
+        return songUri;
+    }
+
+    public void setSongUri(String songUri) {
+        this.songUri = songUri;
+    }
+
+    public Integer getNumSkips() {
+        return numSkips;
+    }
+
+    public void setNumSkips(Integer numSkips) {
+        this.numSkips = numSkips;
     }
 
 
-    @Override
-    public String toString() {
-        return String.format(
-                "SkippedTrack[id=%d, songId='%s', playlistId='%s']",
-                id, songId, playlistId);
-    }
 }

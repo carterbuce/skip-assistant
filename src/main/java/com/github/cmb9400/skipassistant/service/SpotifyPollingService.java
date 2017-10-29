@@ -1,5 +1,6 @@
 package com.github.cmb9400.skipassistant.service;
 
+import com.github.cmb9400.skipassistant.domain.SkippedTrackConverter;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.wrapper.spotify.Api;
 import com.wrapper.spotify.exceptions.WebApiException;
@@ -32,6 +33,9 @@ public class SpotifyPollingService {
 
     @Autowired
     SpotifyHelperService spotifyHelperService;
+
+    @Autowired
+    SkippedTrackConverter skippedTrackConverter;
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyPollingService.class);
@@ -130,6 +134,7 @@ public class SpotifyPollingService {
                     // store most recently played song for further queries
                     mostRecent = currentSong;
                 }
+                LOGGER.info("saving song");
             }
             catch (Exception e){
                 LOGGER.error("Polling service failed!");
@@ -139,6 +144,12 @@ public class SpotifyPollingService {
         }
     }
 
+
+    /**
+     * determine if a song was skipped and if so, save it to the repository
+     * @param prevSong
+     * @param nextSong
+     */
     private void checkSkipped(CurrentlyPlayingTrack prevSong, CurrentlyPlayingTrack nextSong) {
         // find which songs were skipped and save them to the repository
         if (spotifyHelperService.wasSkipped(prevSong, nextSong) &&
@@ -146,7 +157,8 @@ public class SpotifyPollingService {
             LOGGER.info("Skipped song detected! \n    "
                     + user.getId() + " skipped " + prevSong.getItem().getName()
                     + "\n    in playlist " + prevSong.getContext().getUri());
-            // TODO skippedTrackRepository.save(new SkippedTrackEntity(code, "bar"));
+
+            skippedTrackRepository.insertOrUpdateCount(1, prevSong.getContext().getHref(), prevSong.getItem().getUri(), user.getId());
         }
     }
 
