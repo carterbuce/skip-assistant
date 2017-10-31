@@ -44,6 +44,15 @@ public class SpotifyPollingService {
     private User user;
 
 
+    public Api getApi() {
+        return api;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+
     /**
      * Constructor for a polling service object. Key is not autowired, it is passed in during creation
      * @param code the user's authorization code
@@ -60,8 +69,6 @@ public class SpotifyPollingService {
     @Async
     public void run() throws RuntimeException {
         try {
-            init();
-            login();
             pollSongs();
         }
         catch (Exception e) {
@@ -70,8 +77,14 @@ public class SpotifyPollingService {
     }
 
 
-    private void init() {
-        api = spotifyHelperService.getApiBuilder().build();
+    public void init() {
+        try {
+            api = spotifyHelperService.getApiBuilder().build();
+            login();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -85,14 +98,15 @@ public class SpotifyPollingService {
             api.setAccessToken(authorizationCodeCredentials.getAccessToken());
             api.setRefreshToken(authorizationCodeCredentials.getRefreshToken());
             user = api.getMe().build().get();
+            String userId = user.getId();
 
             // don't continue if already polling that user
-            if (spotifyHelperService.runningUserIds.contains(user.getId())) {
-                LOGGER.error("Already polling user " + user.getId() + "!");
-                throw new RuntimeException("Already polling user " + user.getId() + "!");
+            if (spotifyHelperService.runningUsers.containsKey(userId)) {
+                LOGGER.error("Already polling user " + userId + "!");
+                throw new RuntimeException("Already polling user " + userId + "!");
             }
             else {
-                spotifyHelperService.runningUserIds.add(user.getId());
+                spotifyHelperService.runningUsers.put(userId, this);
             }
         }
         catch (WebApiException | IOException e) {
@@ -134,7 +148,6 @@ public class SpotifyPollingService {
                     // store most recently played song for further queries
                     mostRecent = currentSong;
                 }
-                LOGGER.info("saving song");
             }
             catch (Exception e){
                 LOGGER.error("Polling service failed!");

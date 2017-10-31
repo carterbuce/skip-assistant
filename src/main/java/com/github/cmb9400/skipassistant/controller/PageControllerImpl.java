@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.http.HttpSession;
+
 @Controller
 public class PageControllerImpl implements PageController {
 
@@ -22,25 +24,34 @@ public class PageControllerImpl implements PageController {
 
 
     @Override
-    public String index(@RequestParam(value="name", required=false, defaultValue="World") String name, Model model) {
-        model.addAttribute("name", name);
-        return "index";
+    public String index(Model model, HttpSession session) {
+        if (session.getAttribute("api") == null) {
+            String authURL = spotifyHelperService.getAuthorizationURL();
+            model.addAttribute("loginURL", authURL);
+
+            return "index";
+        }
+        else {
+            model.addAttribute("user", session.getAttribute("user"));
+            return "songList";
+        }
     }
 
-    @Override
-    public String login(Model model) {
-        String authURL = spotifyHelperService.getAuthorizationURL();
-        model.addAttribute("link", authURL);
-
-        return "login";
-    }
 
     @Override
-    public String callback(@RequestParam(value="code", required=true) String code, Model model) {
-        SpotifyPollingService pollingService = spotifyHelperService.getNewPollingService(code);
-        pollingService.run();
+    public String callback(@RequestParam(value="code", required=true) String code, Model model, HttpSession session) {
+        try {
+            SpotifyPollingService pollingService = spotifyHelperService.getNewPollingService(code);
+            pollingService.init();
 
-        model.addAttribute("code", code);
-        return "callback";
+            session.setAttribute("user", pollingService.getUser().getId());
+            session.setAttribute("api", pollingService.getApi());
+
+            pollingService.run();
+            return "redirect:/";
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 }
