@@ -22,8 +22,10 @@ public interface SkippedTrackRepository extends CrudRepository<SkippedTrackEntit
      */
     @Transactional
     @Modifying(clearAutomatically=true)
-    @Query(value="INSERT INTO SKIPPED_TRACK_ENTITY(NUM_SKIPS, PLAYLIST_HREF, SONG_URI, USER_ID) VALUES (?1, ?2, ?3, ?4) ON DUPLICATE KEY UPDATE NUM_SKIPS = NUM_SKIPS + 1", nativeQuery = true)
-    public void insertOrUpdateCount(int numSkips, String playlist, String song, String user);
+    @Query(value="INSERT INTO SKIPPED_TRACK_ENTITY(NUM_SKIPS, PLAYLIST_ID, SONG_URI, USER_ID, SONG_NAME, PLAYLIST_NAME)" +
+            " VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON DUPLICATE KEY UPDATE NUM_SKIPS = NUM_SKIPS + 1", nativeQuery = true)
+    public void insertOrUpdateCount(int numSkips, String playlistId, String songUri, String user,
+                                    String songName, String playlistName);
 
     public List<SkippedTrackEntity> findByUserIdIs(String userId);
 }

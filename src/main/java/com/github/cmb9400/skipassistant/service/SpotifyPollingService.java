@@ -163,15 +163,26 @@ public class SpotifyPollingService {
      * @param prevSong
      * @param nextSong
      */
-    private void checkSkipped(CurrentlyPlayingTrack prevSong, CurrentlyPlayingTrack nextSong) {
+    private void checkSkipped(CurrentlyPlayingTrack prevSong, CurrentlyPlayingTrack nextSong)
+            throws WebApiException, IOException {
+
         // find which songs were skipped and save them to the repository
         if (spotifyHelperService.wasSkipped(prevSong, nextSong) &&
                 spotifyHelperService.isValidPlaylistTrack(prevSong, user)) {
-            LOGGER.info("Skipped song detected! \n    "
-                    + user.getId() + " skipped " + prevSong.getItem().getName()
-                    + "\n    in playlist " + prevSong.getContext().getUri());
 
-            skippedTrackRepository.insertOrUpdateCount(1, prevSong.getContext().getHref(), prevSong.getItem().getUri(), user.getId());
+            String userId = user.getId();
+            String songUri = prevSong.getItem().getUri();
+            String songName = prevSong.getItem().getName();
+
+            String playlistHref = prevSong.getContext().getHref();
+            String playlistId = playlistHref.substring(playlistHref.lastIndexOf("/") + 1, playlistHref.length());
+            String playlistName = api.getPlaylist(userId, playlistId).build().get().getName();
+
+            LOGGER.info("Skipped song detected! \n    "
+                    + userId + " skipped " + songName
+                    + "\n    in playlist " + playlistName);
+
+            skippedTrackRepository.insertOrUpdateCount(1, playlistId, songUri, userId, songName, playlistName);
         }
     }
 

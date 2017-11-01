@@ -10,15 +10,15 @@
 <body>
 <p th:text="${user} + '\'s list of skipped songs:'" />
 
-<table th:if="${songs != null}">
+<table th:if="${!songs.empty}">
     <tr>
-        <td>Playlist Link</td>
-        <td>Song URI</td>
+        <td>Playlist</td>
+        <td>Song</td>
         <td>Skip Count</td>
     </tr>
     <tr th:each="song : ${songs}">
-        <td th:text="${song.playlistHref}">Playlist Link</td>
-        <td th:text="${song.songUri}">Song URI</td>
+        <td th:text="${song.playlistName}">Playlist</td>
+        <td th:text="${song.songName}">Song</td>
         <td th:text="${song.numSkips}">Skip Count</td>
     </tr>
 </table>

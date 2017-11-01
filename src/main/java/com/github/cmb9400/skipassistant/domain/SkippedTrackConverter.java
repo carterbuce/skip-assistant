@@ -8,7 +8,7 @@ public class SkippedTrackConverter {
     public SkippedTrackModel toModel(SkippedTrackEntity entity) {
         SkippedTrackModel model = new SkippedTrackModel();
 
-        model.setPlaylistHref(entity.getPlaylistHref());
+        model.setPlaylistId(entity.getPlaylistId());
         model.setSongUri(entity.getSongUri());
         model.setUserId(entity.getUserId());
 
@@ -19,7 +19,7 @@ public class SkippedTrackConverter {
     public SkippedTrackEntity toEntity(SkippedTrackModel model) {
         SkippedTrackEntity entity = new SkippedTrackEntity();
 
-        entity.setPlaylistHref(model.getPlaylistHref());
+        entity.setPlaylistId(model.getPlaylistId());
         entity.setSongUri(model.getSongUri());
         entity.setUserId(model.getUserId());
         entity.setNumSkips(1);

@@ -5,15 +5,15 @@ import java.io.Serializable;
 public class SkippedTrackModel implements Serializable{
 
     protected String userId;
-    protected String playlistHref;
+    protected String playlistId;
     protected String songUri;
 
 
     public SkippedTrackModel() {}
 
-    public SkippedTrackModel(String userId, String playlistHref, String songUri) {
+    public SkippedTrackModel(String userId, String playlistId, String songUri) {
         this.userId = userId;
-        this.playlistHref = playlistHref;
+        this.playlistId = playlistId;
         this.songUri = songUri;
     }
 
@@ -24,7 +24,7 @@ public class SkippedTrackModel implements Serializable{
         result = prime * result
                 + ((userId == null) ? 0 : userId.hashCode());
         result = prime * result
-                + ((playlistHref == null) ? 0 : playlistHref.hashCode());
+                + ((playlistId == null) ? 0 : playlistId.hashCode());
         result = prime * result
                 + ((songUri == null) ? 0 : songUri.hashCode());
         return result;
@@ -39,7 +39,7 @@ public class SkippedTrackModel implements Serializable{
             SkippedTrackModel other = (SkippedTrackModel) obj;
 
             return other.userId.equals(this.userId) &&
-                    other.playlistHref.equals(this.playlistHref) &&
+                    other.playlistId.equals(this.playlistId) &&
                     other.songUri.equals(this.songUri);
         } else {
             return false;
@@ -54,12 +54,12 @@ public class SkippedTrackModel implements Serializable{
         this.userId = userId;
     }
 
-    public String getPlaylistHref() {
-        return playlistHref;
+    public String getPlaylistId() {
+        return playlistId;
     }
 
-    public void setPlaylistHref(String playlistHref) {
-        this.playlistHref = playlistHref;
+    public void setPlaylistId(String playlistId) {
+        this.playlistId = playlistId;
     }
 
     public String getSongUri() {
