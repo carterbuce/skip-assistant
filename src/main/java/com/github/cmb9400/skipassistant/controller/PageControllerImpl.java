@@ -1,5 +1,6 @@
 package com.github.cmb9400.skipassistant.controller;
 
+import com.github.cmb9400.skipassistant.domain.SkippedTrackEntity;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.github.cmb9400.skipassistant.service.SpotifyHelperService;
 import com.github.cmb9400.skipassistant.service.SpotifyPollingService;
@@ -10,6 +11,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpSession;
+
+import java.util.List;
 
 @Controller
 public class PageControllerImpl implements PageController {
@@ -33,6 +36,10 @@ public class PageControllerImpl implements PageController {
         }
         else {
             model.addAttribute("user", session.getAttribute("user"));
+
+            List<SkippedTrackEntity> songs = spotifyHelperService.getTracksForUserId((String) session.getAttribute("user"));
+            model.addAttribute("songs", songs);
+
             return "songList";
         }
     }

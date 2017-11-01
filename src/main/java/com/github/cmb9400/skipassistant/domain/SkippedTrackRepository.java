@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 
+import java.util.List;
+
 @Repository
 public interface SkippedTrackRepository extends CrudRepository<SkippedTrackEntity, Long> {
 
@@ -23,4 +25,5 @@ public interface SkippedTrackRepository extends CrudRepository<SkippedTrackEntit
     @Query(value="INSERT INTO SKIPPED_TRACK_ENTITY(NUM_SKIPS, PLAYLIST_HREF, SONG_URI, USER_ID) VALUES (?1, ?2, ?3, ?4) ON DUPLICATE KEY UPDATE NUM_SKIPS = NUM_SKIPS + 1", nativeQuery = true)
     public void insertOrUpdateCount(int numSkips, String playlist, String song, String user);
 
+    public List<SkippedTrackEntity> findByUserIdIs(String userId);
 }

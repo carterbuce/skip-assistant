@@ -1,10 +1,27 @@
-<!DOCTYPE HTML>
-<html xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <title>Skip Assistant</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
 <p th:text="${user} + '\'s list of skipped songs:'" />
+
+<table th:if="${songs != null}">
+    <tr>
+        <td>Playlist Link</td>
+        <td>Song URI</td>
+        <td>Skip Count</td>
+    </tr>
+    <tr th:each="song : ${songs}">
+        <td th:text="${song.playlistHref}">Playlist Link</td>
+        <td th:text="${song.songUri}">Song URI</td>
+        <td th:text="${song.numSkips}">Skip Count</td>
+    </tr>
+</table>
+
 </body>
 </html>

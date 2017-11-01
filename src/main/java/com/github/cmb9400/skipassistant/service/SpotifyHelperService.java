@@ -1,5 +1,7 @@
 package com.github.cmb9400.skipassistant.service;
 
+import com.github.cmb9400.skipassistant.domain.SkippedTrackEntity;
+import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.wrapper.spotify.Api;
 import com.wrapper.spotify.models.CurrentlyPlayingTrack;
 import com.wrapper.spotify.models.User;
@@ -27,6 +29,9 @@ public class SpotifyHelperService {
 
     @Autowired
     ApplicationContext applicationContext;
+
+    @Autowired
+    SkippedTrackRepository skippedTrackRepository;
 
     public Map<String, SpotifyPollingService> runningUsers = new HashMap<>();
 
@@ -61,6 +66,11 @@ public class SpotifyHelperService {
         String state = env.getProperty("spotify.oauth.state");
 
         return api.createAuthorizeURL(scopeList, state);
+    }
+
+
+    public List<SkippedTrackEntity> getTracksForUserId(String user) {
+        return skippedTrackRepository.findByUserIdIs(user);
     }
 
 
