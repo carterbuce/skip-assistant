@@ -70,7 +70,7 @@ public class SpotifyHelperService {
 
 
     public List<SkippedTrackEntity> getTracksForUserId(String user) {
-        return skippedTrackRepository.findByUserIdIs(user);
+        return skippedTrackRepository.findByUserIdIsOrderByNumSkipsDescPlaylistNameDesc(user);
     }
 
 

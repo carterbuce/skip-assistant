@@ -27,5 +27,5 @@ public interface SkippedTrackRepository extends CrudRepository<SkippedTrackEntit
     public void insertOrUpdateCount(int numSkips, String playlistId, String songUri, String user,
                                     String songName, String playlistName);
 
-    public List<SkippedTrackEntity> findByUserIdIs(String userId);
+    public List<SkippedTrackEntity> findByUserIdIsOrderByNumSkipsDescPlaylistNameDesc(String userId);
 }
