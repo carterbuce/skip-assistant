@@ -8,6 +8,7 @@ import com.github.cmb9400.skipassistant.service.SpotifyPollingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpSession;
@@ -39,6 +40,7 @@ public class PageControllerImpl implements PageController {
 
             List<SkippedTrackEntity> songs = spotifyHelperService.getTracksForUserId((String) session.getAttribute("user"));
             model.addAttribute("songs", songs);
+            model.addAttribute("song", new SkippedTrackEntity()); // placeholder for the remove button
 
             return "songList";
         }
@@ -61,4 +63,11 @@ public class PageControllerImpl implements PageController {
             throw new RuntimeException(e.getMessage());
         }
     }
+
+
+    @Override
+    public String processForm(@ModelAttribute("song") SkippedTrackEntity song, Model model, HttpSession session) {
+        return "redirect:/";
+    }
+
 }
