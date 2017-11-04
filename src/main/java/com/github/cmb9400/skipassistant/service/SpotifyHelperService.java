@@ -3,7 +3,9 @@ package com.github.cmb9400.skipassistant.service;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackEntity;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.wrapper.spotify.Api;
+import com.wrapper.spotify.exceptions.WebApiException;
 import com.wrapper.spotify.models.CurrentlyPlayingTrack;
+import com.wrapper.spotify.models.SnapshotResult;
 import com.wrapper.spotify.models.User;
 
 import org.slf4j.Logger;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +75,25 @@ public class SpotifyHelperService {
 
     public List<SkippedTrackEntity> getTracksForUserId(String user) {
         return skippedTrackRepository.findByUserIdIsOrderByNumSkipsDescPlaylistNameDesc(user);
+    }
+
+
+    public void removeTrack(SkippedTrackEntity trackToRemove, Api api, String userId) {
+        // remove the track from its playlist
+        List<String> tracksToRemove = new ArrayList<String>() {{
+            add(trackToRemove.getSongUri());
+        }};
+
+        try {
+            // remove the track from its playlist
+            SnapshotResult result = api.removeTrackFromPlaylist(userId, trackToRemove.getPlaylistId(), tracksToRemove).build().delete();
+
+            // remove the track from the database
+            skippedTrackRepository.delete(trackToRemove);
+        }
+        catch(WebApiException | IOException e){
+            // TODO return fail?
+        }
     }
 
 

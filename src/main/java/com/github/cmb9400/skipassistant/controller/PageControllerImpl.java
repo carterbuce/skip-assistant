@@ -4,6 +4,7 @@ import com.github.cmb9400.skipassistant.domain.SkippedTrackEntity;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.github.cmb9400.skipassistant.service.SpotifyHelperService;
 import com.github.cmb9400.skipassistant.service.SpotifyPollingService;
+import com.wrapper.spotify.Api;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -67,6 +68,8 @@ public class PageControllerImpl implements PageController {
 
     @Override
     public String processForm(@ModelAttribute("song") SkippedTrackEntity song, Model model, HttpSession session) {
+        spotifyHelperService.removeTrack(song, (Api) session.getAttribute("api"), (String) session.getAttribute("user"));
+
         return "redirect:/";
     }
 
