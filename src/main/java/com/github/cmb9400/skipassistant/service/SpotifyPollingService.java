@@ -153,9 +153,22 @@ public class SpotifyPollingService {
                 }
             }
             catch (Exception e){
-                LOGGER.error("Polling service failed!");
-                LOGGER.error(e.getMessage());
-                e.printStackTrace();
+                // refresh access token on 401 error
+                if (e.getMessage().equals("401")) {
+                    LOGGER.info("Refreshing access token...");
+                    try {
+                        api.setAccessToken(api.refreshAccessToken().build().get().getAccessToken());
+                    }
+                    catch (Exception e2) {
+                        LOGGER.error(e2.getMessage());
+                        e2.printStackTrace();
+                    }
+                }
+                else {
+                    LOGGER.error("Polling service failed!");
+                    LOGGER.error(e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
     }
