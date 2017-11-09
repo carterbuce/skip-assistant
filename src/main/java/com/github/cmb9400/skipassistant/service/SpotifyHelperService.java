@@ -73,11 +73,17 @@ public class SpotifyHelperService {
     }
 
 
+    /**
+     * For a given user, get all tracks in the database that they've skipped
+     */
     public List<SkippedTrackEntity> getTracksForUserId(String user) {
         return skippedTrackRepository.findByUserIdIsOrderByNumSkipsDescPlaylistNameDesc(user);
     }
 
 
+    /**
+     * Remove a track from both the internal database and that track's playlist
+     */
     public void removeTrack(SkippedTrackEntity trackToRemove, Api api, String userId) {
         // remove the track from its playlist
         List<String> tracksToRemove = new ArrayList<String>() {{

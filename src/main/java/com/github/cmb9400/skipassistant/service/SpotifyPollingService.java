@@ -8,6 +8,7 @@ import com.wrapper.spotify.models.AuthorizationCodeCredentials;
 import com.wrapper.spotify.models.CurrentlyPlayingTrack;
 import com.wrapper.spotify.models.User;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Scope("prototype")
@@ -173,6 +176,8 @@ public class SpotifyPollingService {
             String userId = user.getId();
             String songUri = prevSong.getItem().getUri();
             String songName = prevSong.getItem().getName();
+            List<String> artistList = prevSong.getItem().getArtists().stream().map(x -> x.getName()).collect(Collectors.toList());
+            String songArtistNames = songName + " - " + StringUtils.join(artistList, ", ");
 
             String playlistHref = prevSong.getContext().getHref();
             String playlistId = playlistHref.substring(playlistHref.lastIndexOf("/") + 1, playlistHref.length());
@@ -182,7 +187,7 @@ public class SpotifyPollingService {
                     + userId + " skipped " + songName
                     + "\n    in playlist " + playlistName);
 
-            skippedTrackRepository.insertOrUpdateCount(1, playlistId, songUri, userId, songName, playlistName);
+            skippedTrackRepository.insertOrUpdateCount(1, playlistId, songUri, userId, songArtistNames, playlistName);
         }
     }
 

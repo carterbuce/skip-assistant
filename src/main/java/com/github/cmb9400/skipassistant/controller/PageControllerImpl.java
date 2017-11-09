@@ -67,8 +67,16 @@ public class PageControllerImpl implements PageController {
 
 
     @Override
-    public String processForm(@ModelAttribute("song") SkippedTrackEntity song, Model model, HttpSession session) {
+    public String removeFromPlaylist(@ModelAttribute("song") SkippedTrackEntity song, Model model, HttpSession session) {
         spotifyHelperService.removeTrack(song, (Api) session.getAttribute("api"), (String) session.getAttribute("user"));
+
+        return "redirect:/";
+    }
+
+
+    @Override
+    public String keepInPlaylist(@ModelAttribute("song") SkippedTrackEntity song, Model model, HttpSession session) {
+        skippedTrackRepository.delete(song);
 
         return "redirect:/";
     }
