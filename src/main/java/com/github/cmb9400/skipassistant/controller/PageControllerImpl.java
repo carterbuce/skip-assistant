@@ -2,6 +2,7 @@ package com.github.cmb9400.skipassistant.controller;
 
 import com.github.cmb9400.skipassistant.domain.SkippedTrackEntity;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
+import com.github.cmb9400.skipassistant.exceptions.AlreadyRunningForUserException;
 import com.github.cmb9400.skipassistant.service.SpotifyHelperService;
 import com.github.cmb9400.skipassistant.service.SpotifyPollingService;
 import com.wrapper.spotify.Api;
@@ -52,12 +53,21 @@ public class PageControllerImpl implements PageController {
     public String callback(@RequestParam(value="code", required=true) String code, Model model, HttpSession session) {
         try {
             SpotifyPollingService pollingService = spotifyHelperService.getNewPollingService(code);
-            pollingService.init();
 
-            session.setAttribute("user", pollingService.getUser().getId());
-            session.setAttribute("api", pollingService.getApi());
+            try {
+                pollingService.init();
 
-            pollingService.run();
+                session.setAttribute("user", pollingService.getUser().getId());
+                session.setAttribute("api", pollingService.getApi());
+
+                pollingService.run();
+            }
+            catch (AlreadyRunningForUserException e) {
+                String userId = e.getMessage();
+                session.setAttribute("user", userId);
+                session.setAttribute("api", spotifyHelperService.runningUsers.get(userId));
+            }
+
             return "redirect:/";
         }
         catch (Exception e) {

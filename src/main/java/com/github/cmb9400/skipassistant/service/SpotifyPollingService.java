@@ -2,6 +2,7 @@ package com.github.cmb9400.skipassistant.service;
 
 import com.github.cmb9400.skipassistant.domain.SkippedTrackConverter;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
+import com.github.cmb9400.skipassistant.exceptions.AlreadyRunningForUserException;
 import com.wrapper.spotify.Api;
 import com.wrapper.spotify.exceptions.WebApiException;
 import com.wrapper.spotify.models.AuthorizationCodeCredentials;
@@ -80,10 +81,13 @@ public class SpotifyPollingService {
     }
 
 
-    public void init() {
+    public void init() throws AlreadyRunningForUserException {
         try {
             api = spotifyHelperService.getApiBuilder().build();
             login();
+        }
+        catch (AlreadyRunningForUserException e) {
+            throw e;
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -94,7 +98,7 @@ public class SpotifyPollingService {
     /**
      * Log in to the account using the authorization code and get the access token
      */
-    private void login() throws IOException, WebApiException, RuntimeException {
+    private void login() throws IOException, WebApiException, AlreadyRunningForUserException, RuntimeException {
         try {
             LOGGER.info("Getting Tokens from Authorization Code...");
             AuthorizationCodeCredentials authorizationCodeCredentials = api.authorizationCodeGrant(code).build().get();
@@ -106,7 +110,7 @@ public class SpotifyPollingService {
             // don't continue if already polling that user
             if (spotifyHelperService.runningUsers.containsKey(userId)) {
                 LOGGER.error("Already polling user " + userId + "!");
-                throw new RuntimeException("Already polling user " + userId + "!");
+                throw new AlreadyRunningForUserException(userId);
             }
             else {
                 spotifyHelperService.runningUsers.put(userId, this);
@@ -125,7 +129,6 @@ public class SpotifyPollingService {
      * Once it polls the service, it will store the most recently played song
      * @see <a href=https://developer.spotify.com/web-api/web-api-personalization-endpoints/get-recently-played/>Spotify Docs</a>
      * TODO deal with 429 too many requests response code
-     * TODO deal with 401 unauthorized -- refresh access token
      */
     private void pollSongs() {
         LOGGER.info("Searching for skipped songs...");
