@@ -4,6 +4,7 @@ import com.github.cmb9400.skipassistant.domain.SkippedTrackConverter;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.github.cmb9400.skipassistant.exceptions.AlreadyRunningForUserException;
 import com.wrapper.spotify.Api;
+import com.wrapper.spotify.exceptions.EmptyResponseException;
 import com.wrapper.spotify.exceptions.WebApiException;
 import com.wrapper.spotify.models.AuthorizationCodeCredentials;
 import com.wrapper.spotify.models.CurrentlyPlayingTrack;
@@ -154,6 +155,9 @@ public class SpotifyPollingService {
                     // store most recently played song for further queries
                     mostRecent = currentSong;
                 }
+            }
+            catch (EmptyResponseException e) {
+                LOGGER.debug("No tracks playing for " + user.getId());
             }
             catch (Exception e){
                 // refresh access token on 401 error

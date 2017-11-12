@@ -65,7 +65,7 @@ public class PageControllerImpl implements PageController {
             catch (AlreadyRunningForUserException e) {
                 String userId = e.getMessage();
                 session.setAttribute("user", userId);
-                session.setAttribute("api", spotifyHelperService.runningUsers.get(userId));
+                session.setAttribute("api", spotifyHelperService.runningUsers.get(userId).getApi());
             }
 
             return "redirect:/";
