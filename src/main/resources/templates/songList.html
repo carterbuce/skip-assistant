@@ -12,14 +12,13 @@
 
 <table border="1" th:if="${!songs.empty}">
     <tr>
+        <td></td>
+        <td></td>
         <td>Playlist</td>
         <td>Song</td>
         <td>Skip Count</td>
     </tr>
     <tr th:each="song : ${songs}">
-        <td th:text="${song.playlistName}">Playlist</td>
-        <td th:text="${song.songName}">Song</td>
-        <td th:text="${song.numSkips}">Skip Count</td>
         <td>
             <form ACTION="#" th:action="@{/remove}" th:object="${song}" method="POST">
                 <input type="hidden" th:name="userId"       th:id="userId"       th:value="*{userId}"/>
@@ -30,6 +29,8 @@
                 <input type="hidden" th:name="playlistName" th:id="playlistName" th:value="*{playlistName}"/>
                 <button type="submit">Remove from Playlist</button>
             </form>
+        </td>
+        <td>
             <form ACTION="#" th:action="@{/dontremove}" th:object="${song}" method="POST">
                 <input type="hidden" th:name="userId"       th:id="userId"       th:value="*{userId}"/>
                 <input type="hidden" th:name="playlistId"   th:id="playlistId"   th:value="*{playlistId}"/>
@@ -40,6 +41,9 @@
                 <button type="submit">Don't Remove</button>
             </form>
         </td>
+        <td th:text="${song.playlistName}">Playlist</td>
+        <td th:text="${song.songName}">Song</td>
+        <td th:text="${song.numSkips}">Skip Count</td>
     </tr>
 </table>
 
