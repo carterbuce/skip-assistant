@@ -161,7 +161,7 @@ public class SpotifyPollingService {
             }
             catch (Exception e){
                 // refresh access token on 401 error
-                if (e.getMessage().equals("401")) {
+                if (e.getMessage() != null && e.getMessage().equals("401")) {
                     LOGGER.info("Refreshing access token...");
                     try {
                         api.setAccessToken(api.refreshAccessToken().build().get().getAccessToken());
