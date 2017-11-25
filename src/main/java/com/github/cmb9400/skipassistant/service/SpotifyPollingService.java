@@ -167,14 +167,15 @@ public class SpotifyPollingService {
                         api.setAccessToken(api.refreshAccessToken().build().get().getAccessToken());
                     }
                     catch (Exception e2) {
+                        LOGGER.error("Failed to set access token!");
                         LOGGER.error(e2.getMessage());
-                        e2.printStackTrace();
+                        // e2.printStackTrace();
                     }
                 }
                 else {
                     LOGGER.error("Polling service failed!");
                     LOGGER.error(e.getMessage());
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
             }
         }
