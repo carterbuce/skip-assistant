@@ -17,6 +17,7 @@
         <td>Playlist</td>
         <td>Song</td>
         <td>Skip Count</td>
+        <td></td>
     </tr>
     <tr th:each="song : ${songs}">
         <td>
@@ -27,6 +28,7 @@
                 <input type="hidden" th:name="numSkips"     th:id="numSkips"     th:value="*{numSkips}"/>
                 <input type="hidden" th:name="songName"     th:id="songName"     th:value="*{songName}"/>
                 <input type="hidden" th:name="playlistName" th:id="playlistName" th:value="*{playlistName}"/>
+                <input type="hidden" th:name="previewUrl" th:id="previewUrl" th:value="*{previewUrl}"/>
                 <button type="submit">Remove from Playlist</button>
             </form>
         </td>
@@ -38,12 +40,14 @@
                 <input type="hidden" th:name="numSkips"     th:id="numSkips"     th:value="*{numSkips}"/>
                 <input type="hidden" th:name="songName"     th:id="songName"     th:value="*{songName}"/>
                 <input type="hidden" th:name="playlistName" th:id="playlistName" th:value="*{playlistName}"/>
+                <input type="hidden" th:name="previewUrl" th:id="previewUrl" th:value="*{previewUrl}"/>
                 <button type="submit">Don't Remove</button>
             </form>
         </td>
         <td th:text="${song.playlistName}">Playlist</td>
         <td th:text="${song.songName}">Song</td>
         <td th:text="${song.numSkips}">Skip Count</td>
+        <td><div th:if="${song.previewUrl != null}"><a onclick="this.firstChild.play()" class="button"><audio th:src="${song.previewUrl}"></audio>&#9658;</a></div></td>
     </tr>
 </table>
 

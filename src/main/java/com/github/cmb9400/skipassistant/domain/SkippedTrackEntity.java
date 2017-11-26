@@ -15,7 +15,16 @@ public class SkippedTrackEntity {
     Integer numSkips;
     String songName;
     String playlistName;
+    String previewUrl;
 
+
+    public String getPreviewUrl() {
+        return previewUrl;
+    }
+
+    public void setPreviewUrl(String previewUrl) {
+        this.previewUrl = previewUrl;
+    }
 
     public String getSongName() {
         return songName;

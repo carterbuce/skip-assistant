@@ -204,11 +204,17 @@ public class SpotifyPollingService {
             String playlistId = playlistHref.substring(playlistHref.lastIndexOf("/") + 1, playlistHref.length());
             String playlistName = api.getPlaylist(userId, playlistId).build().get().getName();
 
+            String previewUrl = api.getTrack(songUri.split(":")[2]).build().get().getPreviewUrl();
+
+            if (previewUrl.equals("null")) {
+                previewUrl = null;
+            }
+
             LOGGER.info("Skipped song detected! \n    "
                     + userId + " skipped " + songName
                     + "\n    in playlist " + playlistName);
 
-            skippedTrackRepository.insertOrUpdateCount(1, playlistId, songUri, userId, songArtistNames, playlistName);
+            skippedTrackRepository.insertOrUpdateCount(1, playlistId, songUri, userId, songArtistNames, playlistName, previewUrl);
         }
     }
 
