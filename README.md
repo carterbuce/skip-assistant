@@ -4,6 +4,9 @@ A Spotify-connected app that detects when you skip a song frequently and suggest
 This project makes use of the [Spotify Web API Java](https://github.com/thelinmichael/spotify-web-api-java) library
 and [Spring MVC](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html)
 
+![image](image.jpg)
+
+
 ## Setup
 Create a Spotify application at <https://developer.spotify.com/my-applications> to get ID and Secret values 
 
