@@ -2,11 +2,13 @@ package com.github.cmb9400.skipassistant.service;
 
 import com.github.cmb9400.skipassistant.domain.SkippedTrackEntity;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
-import com.wrapper.spotify.Api;
-import com.wrapper.spotify.exceptions.WebApiException;
-import com.wrapper.spotify.models.CurrentlyPlayingTrack;
-import com.wrapper.spotify.models.SnapshotResult;
-import com.wrapper.spotify.models.User;
+import com.google.gson.JsonArray;
+import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.SpotifyHttpManager;
+import com.wrapper.spotify.exceptions.SpotifyWebApiException;
+import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import com.wrapper.spotify.model_objects.special.SnapshotResult;
+import com.wrapper.spotify.model_objects.specification.User;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,11 +47,17 @@ public class SpotifyHelperService {
      * Get an API builder
      * @return a new API builder with client settings
      */
-    public Api.Builder getApiBuilder() {
-        return Api.builder()
-                .clientId(env.getProperty("spotify.client.id"))
-                .clientSecret(env.getProperty("spotify.client.secret"))
-                .redirectURI(env.getProperty("spotify.redirect.uri"));
+    public SpotifyApi.Builder getApiBuilder() {
+        SpotifyApi.Builder builder = null;
+
+
+        URI redirectUri = SpotifyHttpManager.makeUri(env.getProperty("spotify.redirect.uri"));
+        builder = SpotifyApi.builder()
+                .setClientId(env.getProperty("spotify.client.id"))
+                .setClientSecret(env.getProperty("spotify.client.secret"))
+                .setRedirectUri(redirectUri);
+
+        return builder;
     }
 
 
@@ -60,16 +67,12 @@ public class SpotifyHelperService {
      */
     public String getAuthorizationURL() {
         LOGGER.info("Getting Authorize URL");
-        Api api = getApiBuilder().build();
+        SpotifyApi api = getApiBuilder().build();
 
         // Set the necessary scopes that the application will need from the user
         String scopes = env.getProperty("spotify.oauth.scope");
-        List<String> scopeList = Arrays.asList(scopes.split(","));
 
-        // Set a state. This is used to prevent cross site request forgeries.
-        String state = env.getProperty("spotify.oauth.state");
-
-        return api.createAuthorizeURL(scopeList, state);
+        return api.authorizationCodeUri().scope(scopes).build().execute().toString();
     }
 
 
@@ -84,20 +87,20 @@ public class SpotifyHelperService {
     /**
      * Remove a track from both the internal database and that track's playlist
      */
-    public void removeTrack(SkippedTrackEntity trackToRemove, Api api, String userId) {
+    public void removeTrack(SkippedTrackEntity trackToRemove, SpotifyApi api, String userId) {
         // remove the track from its playlist
-        List<String> tracksToRemove = new ArrayList<String>() {{
-            add(trackToRemove.getSongUri());
-        }};
+        JsonArray trackArray = new JsonArray();
+        trackArray.add(trackToRemove.getSongUri());
 
         try {
             // remove the track from its playlist
-            SnapshotResult result = api.removeTrackFromPlaylist(userId, trackToRemove.getPlaylistId(), tracksToRemove).build().delete();
-
+            SnapshotResult result = api.removeTracksFromPlaylist(userId, trackToRemove.getPlaylistId(), trackArray).build().execute();
+            // TODO add snapshotId into the request to support concurrent changes to playlists
             // remove the track from the database
             skippedTrackRepository.delete(trackToRemove);
         }
-        catch(WebApiException | IOException e){
+        catch(SpotifyWebApiException | IOException e){
+            LOGGER.error(e.getMessage());
             // TODO return fail?
         }
     }
@@ -119,7 +122,7 @@ public class SpotifyHelperService {
      * @param nextSong The song played after checkedSong (more recent)
      * @return if prevSong was skipped or not
      */
-    public Boolean wasSkipped(CurrentlyPlayingTrack prevSong, CurrentlyPlayingTrack nextSong) {
+    public Boolean wasSkipped(CurrentlyPlaying prevSong, CurrentlyPlaying nextSong) {
         if (prevSong == null || nextSong == null) return false;
 
         Long skipSensitivitySeconds = Long.parseLong(env.getProperty("polling.skip.sensitivity.seconds"));
@@ -136,7 +139,7 @@ public class SpotifyHelperService {
      * @param user the user that played the song
      * @return if the song is played from one of the user's playlists
      */
-    public Boolean isValidPlaylistTrack(CurrentlyPlayingTrack song, User user) {
+    public Boolean isValidPlaylistTrack(CurrentlyPlaying song, User user) {
         if (song.getContext() == null) {
             return false;
         }

@@ -3,14 +3,14 @@ package com.github.cmb9400.skipassistant.service;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackConverter;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.github.cmb9400.skipassistant.exceptions.AlreadyRunningForUserException;
-import com.wrapper.spotify.Api;
-import com.wrapper.spotify.exceptions.EmptyResponseException;
-import com.wrapper.spotify.exceptions.WebApiException;
-import com.wrapper.spotify.models.AuthorizationCodeCredentials;
-import com.wrapper.spotify.models.CurrentlyPlayingTrack;
-import com.wrapper.spotify.models.User;
+import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.exceptions.SpotifyWebApiException;
+import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
+import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import com.wrapper.spotify.model_objects.specification.User;
 
 import org.apache.commons.lang.StringUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -45,11 +46,11 @@ public class SpotifyPollingService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyPollingService.class);
     private String code;
-    private Api api;
+    private SpotifyApi api;
     private User user;
 
 
-    public Api getApi() {
+    public SpotifyApi getApi() {
         return api;
     }
 
@@ -99,13 +100,13 @@ public class SpotifyPollingService {
     /**
      * Log in to the account using the authorization code and get the access token
      */
-    private void login() throws IOException, WebApiException, AlreadyRunningForUserException, RuntimeException {
+    private void login() throws IOException, SpotifyWebApiException, AlreadyRunningForUserException, RuntimeException {
         try {
             LOGGER.info("Getting Tokens from Authorization Code...");
-            AuthorizationCodeCredentials authorizationCodeCredentials = api.authorizationCodeGrant(code).build().get();
+            AuthorizationCodeCredentials authorizationCodeCredentials = api.authorizationCode(code).build().execute();
             api.setAccessToken(authorizationCodeCredentials.getAccessToken());
             api.setRefreshToken(authorizationCodeCredentials.getRefreshToken());
-            user = api.getMe().build().get();
+            user = api.getCurrentUsersProfile().build().execute();
             String userId = user.getId();
 
             // don't continue if already polling that user
@@ -117,7 +118,7 @@ public class SpotifyPollingService {
                 spotifyHelperService.runningUsers.put(userId, this);
             }
         }
-        catch (WebApiException | IOException e) {
+        catch (SpotifyWebApiException | IOException e) {
             LOGGER.error(e.getMessage());
             throw e;
         }
@@ -133,17 +134,17 @@ public class SpotifyPollingService {
      */
     private void pollSongs() {
         LOGGER.info("Searching for skipped songs...");
-        CurrentlyPlayingTrack mostRecent = null;
+        CurrentlyPlaying mostRecent = null;
 
         while (true) {
             try {
                 TimeUnit.MILLISECONDS.sleep(Long.parseLong(env.getProperty("polling.frequency.milliseconds")));
 
                 // get current song
-                CurrentlyPlayingTrack currentSong = api.getCurrentlyPlayingTrack().build().get();
+                CurrentlyPlaying currentSong = api.getUsersCurrentlyPlayingTrack().build().execute();
 
 
-                if (currentSong.equals(mostRecent)) {
+                if (currentSong == null || currentSong.equals(mostRecent)) {
                     // do nothing, the song hasn't changed
                 }
                 else {
@@ -156,18 +157,18 @@ public class SpotifyPollingService {
                     mostRecent = currentSong;
                 }
             }
-            catch (EmptyResponseException e) {
-                LOGGER.debug("No tracks playing for " + user.getId());
-            }
+//            catch (EmptyResponseException e) {
+//                LOGGER.debug("No tracks playing for " + user.getId());
+//            }
             catch (Exception e){
                 // refresh access token on 401 error
                 if (e.getMessage() != null && e.getMessage().equals("401")) {
                     LOGGER.info("Refreshing access token...");
                     try {
-                        api.setAccessToken(api.refreshAccessToken().build().get().getAccessToken());
+                        api.authorizationCodeRefresh().build().execute();
                     }
                     catch (Exception e2) {
-                        LOGGER.error("Failed to set access token!");
+                        LOGGER.error("Failed to refresh access token!");
                         LOGGER.error(e2.getMessage());
                         // e2.printStackTrace();
                     }
@@ -175,7 +176,7 @@ public class SpotifyPollingService {
                 else {
                     LOGGER.error("Polling service failed!");
                     LOGGER.error(e.getMessage());
-                    // e.printStackTrace();
+                    e.printStackTrace();
                 }
             }
         }
@@ -187,8 +188,8 @@ public class SpotifyPollingService {
      * @param prevSong
      * @param nextSong
      */
-    private void checkSkipped(CurrentlyPlayingTrack prevSong, CurrentlyPlayingTrack nextSong)
-            throws WebApiException, IOException {
+    private void checkSkipped(CurrentlyPlaying prevSong, CurrentlyPlaying nextSong)
+            throws SpotifyWebApiException, IOException {
 
         // find which songs were skipped and save them to the repository
         if (spotifyHelperService.wasSkipped(prevSong, nextSong) &&
@@ -196,17 +197,18 @@ public class SpotifyPollingService {
 
             String userId = user.getId();
             String songUri = prevSong.getItem().getUri();
+            String songId = prevSong.getItem().getId();
             String songName = prevSong.getItem().getName();
-            List<String> artistList = prevSong.getItem().getArtists().stream().map(x -> x.getName()).collect(Collectors.toList());
+            List<String> artistList = Arrays.stream(prevSong.getItem().getArtists()).map(x -> x.getName()).collect(Collectors.toList());
             String songArtistNames = songName + " - " + StringUtils.join(artistList, ", ");
 
             String playlistHref = prevSong.getContext().getHref();
             String playlistId = playlistHref.substring(playlistHref.lastIndexOf("/") + 1, playlistHref.length());
-            String playlistName = api.getPlaylist(userId, playlistId).build().get().getName();
+            String playlistName = api.getPlaylist(userId, playlistId).build().execute().getName();
 
-            String previewUrl = api.getTrack(songUri.split(":")[2]).build().get().getPreviewUrl();
+            String previewUrl = api.getTrack(songId).build().execute().getPreviewUrl();
 
-            if (previewUrl.equals("null")) {
+            if (previewUrl == null || previewUrl.equals("null")) {
                 previewUrl = null;
             }
 
