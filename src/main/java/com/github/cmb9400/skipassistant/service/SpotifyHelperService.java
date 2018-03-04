@@ -3,6 +3,9 @@ package com.github.cmb9400.skipassistant.service;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackEntity;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
@@ -90,7 +93,12 @@ public class SpotifyHelperService {
     public void removeTrack(SkippedTrackEntity trackToRemove, SpotifyApi api, String userId) {
         // remove the track from its playlist
         JsonArray trackArray = new JsonArray();
-        trackArray.add(trackToRemove.getSongUri());
+        JsonObject trackMap = new JsonObject();
+
+        // build a structure of [{"uri": "<track uri>"}]
+        JsonElement trackUri = new JsonPrimitive(trackToRemove.getSongUri());
+        trackMap.add("uri", trackUri);
+        trackArray.add(trackMap);
 
         try {
             // remove the track from its playlist
