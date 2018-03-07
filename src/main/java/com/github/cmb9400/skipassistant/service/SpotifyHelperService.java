@@ -120,6 +120,9 @@ public class SpotifyHelperService {
      * @return a new polling service object for given key
      */
     public SpotifyPollingService getNewPollingService(String code) {
+        /* TODO determine if it's possible to do a thread implementation instead of a bean.
+                That way, can actually stop the thread and don't need to use applicationcontext
+        */
         return (SpotifyPollingService) applicationContext.getBean("spotifyPollingService", code);
     }
 
