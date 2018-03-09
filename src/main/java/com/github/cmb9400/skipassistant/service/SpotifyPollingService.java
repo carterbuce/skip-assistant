@@ -1,6 +1,5 @@
 package com.github.cmb9400.skipassistant.service;
 
-import com.github.cmb9400.skipassistant.domain.SkippedTrackConverter;
 import com.github.cmb9400.skipassistant.domain.SkippedTrackRepository;
 import com.github.cmb9400.skipassistant.exceptions.AlreadyRunningForUserException;
 import com.wrapper.spotify.SpotifyApi;
@@ -10,7 +9,6 @@ import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import com.wrapper.spotify.model_objects.specification.User;
 
 import org.apache.commons.lang.StringUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,9 +37,6 @@ public class SpotifyPollingService {
 
     @Autowired
     SpotifyHelperService spotifyHelperService;
-
-    @Autowired
-    SkippedTrackConverter skippedTrackConverter;
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyPollingService.class);
